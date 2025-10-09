@@ -30,6 +30,6 @@
 - 支持**UIACCESS级置顶**，方便操作（需管理员权限）
 
 ## 视频介绍
-
+[窗口把柄 - 多功能窗口控制器](https://www.bilibili.com/video/BV1dyxCzaEWZ/ "视频介绍")
 
 # 祝你使用愉快:P
