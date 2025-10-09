@@ -81,9 +81,10 @@ void ShakeWindow(HWND hWnd)
 	RECT rect;
 	GetWindowRect(hWnd, &rect);
 	POINT pos = { rect.left,rect.top };
-	if(GetParent(hWnd))
+	HWND hParent = GetParent(hWnd);
+	if(hParent && (GetWindowLongPtr(hWnd, GWL_STYLE) & WS_CHILD))
 	{
-		ScreenToClient(GetParent(hWnd), &pos);
+		ScreenToClient(hParent, &pos);
 		for(int i = 0; i < times; i++)
 		{
 			// ×ó
@@ -243,6 +244,7 @@ void ResetInformation()
 	SetWindowText(g_EditSizeX, NULL);
 	SetWindowText(g_EditSizeY, NULL);
 	SetWindowText(g_StaticExename, NULL);
+	SetWindowText(g_StaticInstance, NULL);
 	SetWindowText(g_StaticClassname, NULL);
 	SetWindowText(g_EditTitlename, NULL);
 	SetWindowText(g_StaticStyle, NULL);

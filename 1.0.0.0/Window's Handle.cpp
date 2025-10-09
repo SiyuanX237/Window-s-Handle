@@ -3,7 +3,7 @@
 //全局变量区
 HWND g_MainHwnd;
 HINSTANCE g_hInstance;
-TCHAR g_sTitle[] = TEXT("窗口控制器");
+TCHAR g_sTitle[] = TEXT("窗口把柄");
 SIZE g_ClientSize;
 SIZE g_FontSize;
 int g_LineAnchorYStep;
@@ -1265,7 +1265,7 @@ LRESULT CALLBACK AboutProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
 			LinkHwnd_Github = CreateWindowEx(
 				NULL, L"SysLink",
-				L"Github开源地址: <a href=\"https://github.com/SiyuanX237/Window-s-Handle\">LockEngine</a>",
+				L"Github开源地址: <a href=\"https://github.com/SiyuanX237/Window-s-Handle\">Window's Handle</a>",
 				WS_CHILD | WS_VISIBLE,
 				g_FontSize.cx * 2,
 				g_LineAnchorY[5] + g_FontSize.cy,
@@ -1293,7 +1293,7 @@ LRESULT CALLBACK AboutProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
 			RectDrawText.top = g_LineAnchorY[0];
 			RectDrawText.bottom = RectDrawText.top + g_FontSize.cy * 2;
-			DrawText(hdc, TEXT("Window's Handle - 窗口控制器"), -1, &RectDrawText, DT_LEFT | DT_SINGLELINE);
+			DrawText(hdc, TEXT("Window's Handle - 窗口把柄"), -1, &RectDrawText, DT_LEFT | DT_SINGLELINE);
 
 
 			SelectObject(hdc, g_Font);
