@@ -1,4 +1,4 @@
-# Window's Handle(最新版 v1.2.0.0)
+# Window's Handle(旧版 v1.2.0.0)
 ***Handle意味着把柄，一旦握住窗口的把柄就可以为所欲为了***
 ### 作者：[Bilibili - 个人隐思](https://space.bilibili.com/1081364881 "来我主页玩玩ヾ(^∀^)ﾉ")
 ### 爱发电主页：[ThinkAlone](https://afdian.com/a/X1415 "您赞助的每一分都是我前进的动力")
@@ -6,6 +6,9 @@
 
 <img src="/images/afdian-ThinkAlone.jpg" height="300" /> <img src="/images/mm_reward.png" height="300" />
 ## 更新记录
+- 1.2.1.0(2025.10.20)
+  - 修复了因重启explorer导致托盘丢失的问题（感谢Github用户yuri368的issue）
+  - 完善了自动规则中的窗口大小功能，现可以自定义最大化、最小化、隐藏而无需选中窗口大小复选框，右键复选框即可显示选项
 - 1.2.0.0(2025.10.16)
   - 增加了**自动规则模式**，工具会根据您的设置条目，自动对新创建窗口进行对应修改<b>(Beta)</b>
   - 因为**实用性和兼容性**问题，暂时移除了**实例句柄**功能，用打印**目标进程的PID**功能替代
