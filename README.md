@@ -1,4 +1,4 @@
-# Window's Handle(最新版 v1.5.0.0)
+# Window's Handle(最新版 v1.4.1.0)
 ***Handle意味着把柄，一旦握住窗口的把柄就可以为所欲为了***
 ### 作者：[Bilibili - 个人隐思](https://space.bilibili.com/1081364881 "来我主页玩玩ヾ(^∀^)ﾉ")
 ### 爱发电主页：[ThinkAlone](https://afdian.com/a/X1415 "您赞助的每一分都是我前进的动力")
@@ -6,7 +6,7 @@
 
 <img src="/images/afdian-ThinkAlone.jpg" height="300" /> <img src="/images/mm_reward.png" height="300" />
 ## 更新记录
-- 1.5.0.0(2026.1.12)
+- 1.4.1.0(2026.1.12)
   - 修复了因在不同显示屏下的显示问题（使用DIP而非像素）
   - 添加了置顶时在窗口左上角显示置顶状态的气泡框通知
 - 1.4.0.0(2025.11.17)
