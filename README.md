@@ -1,4 +1,4 @@
-# Window's Handle(最新版 v1.4.2.0)
+# Window's Handle(最新版 v1.4.3.0)
 ***Handle意味着把柄，一旦握住窗口的把柄就可以为所欲为了***
 ### 作者：[Bilibili - 个人隐思](https://space.bilibili.com/1081364881 "来我主页玩玩ヾ(^∀^)ﾉ")
 ### 爱发电主页：[ThinkAlone](https://afdian.com/a/X1415 "您赞助的每一分都是我前进的动力")
@@ -6,6 +6,10 @@
 
 <img src="/images/afdian-ThinkAlone.jpg" height="300" /> <img src="/images/mm_reward.png" height="300" />
 ## 更新记录
+- 1.4.3.0(2026.2.12)
+  - 修复了在窗口列表中显示窗口边框时颜色不会跟着变化的问题
+  - 简化了界面操作，把两种窗口风格合并成了**窗口样式**，更直观
+  - 优化了界面布局
 - 1.4.2.0(2026.2.7)
   - 添加了窗口列表**选中时预览窗口指示框**，即使窗口隐藏也可以看到
   - 添加了窗口指示框**霓虹**效果
@@ -58,7 +62,7 @@
 <img src="/images/ScreenShot.png" height="350" /><br>
 ### 窗口风格控制
 <img src="/images/Styles.png" height="350" /><br>
-### 枚举顶级窗口
+### 窗口列表
 <img src="/images/enum1.png" height="400" /><br>
 ### 发送消息
 <img src="/images/Messages.png" height="300" /><br>
@@ -70,14 +74,24 @@
 <img src="/images/Hotkey.png" height="300" /><br>
 ### 窗口链查询
 <img src="/images/WindowChain.png" height="300" /><br>
+<img src="/images/Chain.png" height="300" /><br>
 ### 设置窗口从属
 <img src="/images/Own.png" height="300" /><br>
+
+## 使用教程
+1. 开机自启（下列方法任选一个）：
+   - 在startup文件夹内创建本程序的快捷方式
+   - 在注册表中的开机自启项中填写本程序的路径
+   - 在计划任务中添加本程序开机自启任务
+   - （若不清楚请自行搜索）
+2. 开机自启但只保留托盘而不要显示主界面：
+   - 在上面做好的情况下加上` -tray`参数即可
 
 ## 功能特点
 - **纯Win32**编程，最大程度保留兼容性，**甚至连XP都支持**（个别函数重编译）
 - 大量方便的窗口操作，操作简单
 - 支持**子窗口嵌套**操作，满足你的特殊需求
-- 添加了**枚举**功能，就没有我找不到的窗口
+- 添加了**枚举**功能，可配合**显示窗口边框**功能使用，就没有我找不到的窗口
 - 支持对窗口**发送消息**，Win32开发者狂喜
 - 支持**UIACCESS级置顶**，方便操作（需管理员权限）
 - 支持**按规则修改窗口属性**，对于所有新建窗口都生效
