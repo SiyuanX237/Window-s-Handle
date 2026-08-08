@@ -61,12 +61,14 @@ struct RGB8
 {
 	BYTE r, g, b;
 }g_ColorTable[64];//颜色表
+//bool needMouseHook;
 UINT8 g_ColorIndex;//颜色表的索引
 UINT8 g_FrameWidth;//选择指示框宽度
 bool g_AutoRule;//自动规则模式
 HWINEVENTHOOK g_WindowHook;
 HHOOK g_MouseHook;
 UINT8 g_HookStatus;//鼠标钩子状态，0表示不hook，1表示move模式，2表示resize模式，3表示按住“位置”按钮move窗口
+bool g_PosButtonPressing;
 unordered_map<UINT16, V*> Index啥;//从配置文件到数据库单项的映射
 unordered_map<wstring, vector<V*>> Class啥;//从窗口类名到数据库多项组的映射
 vector<V> 啥;//这是数据库
@@ -265,6 +267,14 @@ LRESULT CALLBACK MouseProc(int nCode, WPARAM wParam, LPARAM lParam)
 
 			if(g_HookStatus == 1)//move模式
 			{
+				if(g_PosButtonPressing)
+				{
+					wchar_t buf[21];
+					wsprintf(buf, L"%ld", pt.x);
+					SetWindowText(g_EditPosX, buf);
+					wsprintf(buf, L"%ld", pt.y);
+					SetWindowText(g_EditPosY, buf);
+				}
 				SetWindowPos(
 					g_TargetWindow,
 					NULL,
@@ -345,22 +355,22 @@ LRESULT CALLBACK MouseProc(int nCode, WPARAM wParam, LPARAM lParam)
 					}
 				}
 			}
-			else//正在按住“位置”按钮move窗口
-			{
-				wchar_t buf[21];
-				wsprintf(buf, L"%ld", pt.x);
-				SetWindowText(g_EditPosX, buf);
-				wsprintf(buf, L"%ld", pt.y);
-				SetWindowText(g_EditPosY, buf);
-				SetWindowPos(
-					g_TargetWindow,
-					NULL,
-					g_LastWindowRect.left + (pt.x - g_LastPoint.x),
-					g_LastWindowRect.top + (pt.y - g_LastPoint.y),
-					0, 0,
-					SWP_NOACTIVATE | SWP_NOSIZE | SWP_NOZORDER
-				);
-			}
+			//else//正在按住“位置”按钮move窗口
+			//{
+			//	wchar_t buf[21];
+			//	wsprintf(buf, L"%ld", pt.x);
+			//	SetWindowText(g_EditPosX, buf);
+			//	wsprintf(buf, L"%ld", pt.y);
+			//	SetWindowText(g_EditPosY, buf);
+			//	SetWindowPos(
+			//		g_TargetWindow,
+			//		NULL,
+			//		g_LastWindowRect.left + (pt.x - g_LastPoint.x),
+			//		g_LastWindowRect.top + (pt.y - g_LastPoint.y),
+			//		0, 0,
+			//		SWP_NOACTIVATE | SWP_NOSIZE | SWP_NOZORDER
+			//	);
+			//}
 
 			break;
 		}
@@ -377,6 +387,30 @@ LRESULT CALLBACK MouseProc(int nCode, WPARAM wParam, LPARAM lParam)
 		}
 		case WM_RBUTTONDOWN:
 		{
+			//先判断是不是右键了“位置”按钮了
+			MSLLHOOKSTRUCT *info =(MSLLHOOKSTRUCT *)lParam;
+			if(WindowFromPoint(info->pt) == g_ButtonPos)
+			{
+				HWND target;
+				char handle[HANDLESIZE];
+				GetWindowTextA(g_EditHandle, handle, ARRAYSIZE(handle));
+				target = (HWND)atoi(handle);
+				if(IsWindow(target))//窗口合法
+				{
+					g_HookStatus = 1;
+					g_PosButtonPressing = true;
+					g_TargetWindow = target;//填充目标窗口
+					GetWindowRect(target, &g_LastWindowRect);//填充窗口原位置
+					SetCursorPos(g_LastWindowRect.left, g_LastWindowRect.top);//鼠标移动到窗口左上角
+					GetCursorPos(&g_LastPoint);//填充鼠标原位置
+				}
+				return 1;
+			}
+			else
+			{
+				g_PosButtonPressing = false;
+			}
+			
 			//没有就算了
 			if(!g_HotkeySize)break;
 			//匹配修饰键
@@ -399,13 +433,20 @@ LRESULT CALLBACK MouseProc(int nCode, WPARAM wParam, LPARAM lParam)
 		case WM_RBUTTONUP:
 		{
 			//没有就算了
-			if(!g_HotkeySize)break;
+			//if(!g_HotkeySize)break;
+			//因为“位置”按钮需要套用这里，需要释放按键，这里不要判断g_HotkeySize
+			
 			if(g_HookStatus)
 			{
-				g_HookStatus = 0;//停止resize窗口，非hook
-				return 1;
+				//if(!needMouseHook)
+				//{
+				//	UnhookWindowsHookEx(g_MouseHook);
+				//	g_MouseHook = NULL;
+				//}
+				g_HookStatus = 0;//停止resize窗口+“位置”按钮move，非hook
+				return 1;//拦截右键弹起
 			}
-			else break;
+			break;
 		}
 	}
 	return CallNextHookEx(g_MouseHook, nCode, wParam, lParam);
@@ -668,29 +709,29 @@ LRESULT CALLBACK ButtonShakeProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPar
 //位置按钮的右键监听
 LRESULT CALLBACK ButtonPosProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData)
 {
-	switch(msg)
-	{
-		// //发送定时器消息
-		case WM_RBUTTONDOWN:
-		{
-			HWND target;
-			char handle[HANDLESIZE];
-			GetWindowTextA(g_EditHandle, handle, ARRAYSIZE(handle));
-			target = (HWND)atoi(handle);
-			if(!IsWindow(target))
-			{
-				break;//非法窗口就啥也不干呗
-			}
-			g_TargetWindow = target;//填充目标窗口
-			GetWindowRect(target, &g_LastWindowRect);//填充窗口原位置
-			SetCursorPos(g_LastWindowRect.left, g_LastWindowRect.top);//鼠标移动到窗口左上角
-			GetCursorPos(&g_LastPoint);//填充鼠标原位置
-			
-			g_HookStatus = 3;//正在按住“位置”按钮move窗口
-				
-			break;
-		}
-	}
+	//switch(msg)
+	//{
+	//	case WM_RBUTTONDOWN:
+	//	{
+	//		HWND target;
+	//		char handle[HANDLESIZE];
+	//		GetWindowTextA(g_EditHandle, handle, ARRAYSIZE(handle));
+	//		target = (HWND)atoi(handle);
+	//		if(!IsWindow(target))
+	//		{
+	//			break;//非法窗口就啥也不干呗
+	//		}
+	//		if(!needMouseHook)g_MouseHook = SetWindowsHookEx(WH_MOUSE_LL, MouseProc, g_hInstance, 0);
+	//		g_TargetWindow = target;//填充目标窗口
+	//		GetWindowRect(target, &g_LastWindowRect);//填充窗口原位置
+	//		SetCursorPos(g_LastWindowRect.left, g_LastWindowRect.top);//鼠标移动到窗口左上角
+	//		GetCursorPos(&g_LastPoint);//填充鼠标原位置
+	//		
+	//		g_HookStatus = 3;//正在按住“位置”按钮move窗口
+	//			
+	//		break;
+	//	}
+	//}
 	return DefSubclassProc(hwnd, msg, wParam, lParam);
 }
 
@@ -1878,7 +1919,7 @@ LRESULT CALLBACK AboutProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			SelectObject(hdc, g_Font);
 			RectDrawText.top = g_LineAnchorY[1];
 			RectDrawText.bottom = RectDrawText.top + g_FontSize.cy * 1.3;
-			DrawText(hdc, TEXT("版本：1.4.5.0                日期：2026.8.7"), -1, &RectDrawText, DT_LEFT | DT_SINGLELINE);
+			DrawText(hdc, TEXT("版本：1.4.5.0                日期：2026.8.8"), -1, &RectDrawText, DT_LEFT | DT_SINGLELINE);
 			MoveToEx(hdc, g_FontSize.cx * 2, g_LineAnchorY[2], NULL);
 			LineTo(hdc, g_FontSize.cx * 38, g_LineAnchorY[2]);
 
@@ -4918,19 +4959,32 @@ LRESULT CALLBACK HotkeyProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			{
 				MessageBox(hwnd, L"选择根窗口快捷键注册失败", L"提示", MB_OK | MB_ICONERROR);
 			}
-			//带鼠标钩子的快捷键（Transparent、Move、Size）
-			if(g_HotkeyTransparent || g_HotkeyMove || g_HotkeySize)
-			{
 #ifndef _DEBUG
-				g_MouseHook = SetWindowsHookEx(WH_MOUSE_LL, MouseProc, g_hInstance, 0);
-#endif
-				if(!g_MouseHook)
-				{
-					wchar_t buf[30];
-					wsprintf(buf, L"全局鼠标钩子安装失败! 错误码:%lu\n", GetLastError());
-					MessageBox(hwnd, buf, L"提示", MB_OK | MB_ICONERROR);
-				}
+			////带鼠标钩子的快捷键（Transparent、Move、Size）
+			//if(g_HotkeyTransparent || g_HotkeyMove || g_HotkeySize)
+			//{
+			//	needMouseHook = true;
+			//	
+
+			//	if(!g_MouseHook)
+			//	{
+			//		wchar_t buf[30];
+			//		wsprintf(buf, L"全局鼠标钩子安装失败! 错误码:%lu\n", GetLastError());
+			//		MessageBox(hwnd, buf, L"提示", MB_OK | MB_ICONERROR);
+			//	}
+			//}
+			//else
+			//{
+			//	needMouseHook = false;
+			//}
+			g_MouseHook = SetWindowsHookEx(WH_MOUSE_LL, MouseProc, g_hInstance, 0);
+			if(!g_MouseHook)
+			{
+				wchar_t buf[30];
+				wsprintf(buf, L"全局鼠标钩子安装失败! 错误码:%lu\n", GetLastError());
+				MessageBox(hwnd, buf, L"提示", MB_OK | MB_ICONERROR);
 			}
+#endif
 			//Topmost的快捷键
 			if(g_HotkeyTopmost && !RegisterHotKey(g_MainHwnd, ID_Hotkey_Topmost, (g_HotkeyTopmost & 0b111) | ((g_HotkeyTopmost >> 3) & 0b111), g_HotkeyTopmost >> 6))
 			{
@@ -5458,11 +5512,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			{
 				MessageBox(hwnd, L"选择根窗口快捷键注册失败", L"提示", MB_OK | MB_ICONERROR);
 			}
-			if(g_HotkeyTransparent || g_HotkeyMove || g_HotkeySize)
-			{
 #ifndef _DEBUG
+			/*if(g_HotkeyTransparent || g_HotkeyMove || g_HotkeySize)
+			{
+
+				needMouseHook = true;
 				g_MouseHook = SetWindowsHookEx(WH_MOUSE_LL, MouseProc, g_hInstance, 0);
-#endif
+
 				if(!g_MouseHook)
 				{
 					wchar_t buf[30];
@@ -5470,6 +5526,19 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 					MessageBox(hwnd, buf, L"提示", MB_OK | MB_ICONERROR);
 				}
 			}
+			else
+			{
+				needMouseHook = false;
+			}*/
+
+			g_MouseHook = SetWindowsHookEx(WH_MOUSE_LL, MouseProc, g_hInstance, 0);
+			if(!g_MouseHook)
+			{
+				wchar_t buf[30];
+				wsprintf(buf, L"全局鼠标钩子安装失败! 错误码:%lu\n", GetLastError());
+				MessageBox(hwnd, buf, L"提示", MB_OK | MB_ICONERROR);
+			}
+#endif
 			if(g_HotkeyTopmost && !RegisterHotKey(hwnd, ID_Hotkey_Topmost, (g_HotkeyTopmost & 0b111) | ((g_HotkeyTopmost >> 3) & 0b111), g_HotkeyTopmost >> 6))
 			{
 				MessageBox(hwnd, L"切置顶状态快捷键注册失败", L"提示", MB_OK | MB_ICONERROR);
@@ -5640,7 +5709,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 				NULL, NULL
 			);
 			SendMessage(g_ButtonPos, WM_SETFONT, (WPARAM)g_EditFont, 0);
-			SetWindowSubclass(g_ButtonPos, ButtonPosProc, 1, 0);
+			//SetWindowSubclass(g_ButtonPos, ButtonPosProc, 1, 0);
 			CreatePointToolTip(hwnd, g_ButtonPos, L"右键拖动可以快捷移动窗口", NULL, true, TTI_NONE, NULL, NULL);
 
 			g_EditSizeX = CreateWindow(
@@ -7129,7 +7198,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevIntance, LPSTR szCmdline,
 	}
 
 	g_ScreenSize = { GetSystemMetrics(SM_CXSCREEN),GetSystemMetrics(SM_CYSCREEN) };
-	g_WindowSize = AdjustClientSize(685, 338, true, &g_ClientSize, WS_OVERLAPPED | WS_SYSMENU | WS_CAPTION | WS_POPUP, NULL, WS_EX_TOPMOST);//我算得的DIP为685, 338
+	g_WindowSize = AdjustClientSize(685, 340, true, &g_ClientSize, WS_OVERLAPPED | WS_SYSMENU | WS_CAPTION | WS_POPUP, NULL, WS_EX_TOPMOST);//我算得的DIP为685, 338
 	g_MainHwnd = CreateWindowEx(
 		WS_EX_TOPMOST,// 扩展窗口样式
 		TEXT("Window's Handle"),//待注册窗口类名
